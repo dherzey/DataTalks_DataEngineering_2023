@@ -1,1 +1,1 @@
-# DataTalks_DataEngineeringZoomCamp_2023
+# DataTalks_DataEngineering_2023
