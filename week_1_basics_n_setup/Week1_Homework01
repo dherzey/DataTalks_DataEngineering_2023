@@ -1,0 +1,62 @@
+--Question 1:
+docker build --help
+
+
+--Question 2:
+docker run -it --entrypoint=bash python:3.9
+
+
+--Question 3:
+SELECT 
+    COUNT(*)
+FROM 
+    green_taxi_data
+WHERE 
+    DATE(lpep_pickup_datetime) IN ('2019-01-15')
+    AND DATE(lpep_dropoff_datetime) IN ('2019-01-15');
+
+
+--Question 4:
+SELECT 
+    DATE(lpep_pickup_datetime)
+    , COUNT(*)
+FROM 
+    green_taxi_data
+WHERE 
+    DATE(lpep_pickup_datetime) 
+    IN ('2019-01-10','2019-01-15','2019-01-18','2019-01-28')
+GROUP BY 
+    DATE(lpep_pickup_datetime)
+ORDER BY 
+    COUNT(*);
+
+
+--Question 5:
+SELECT 
+    passenger_count
+    , COUNT(*)
+FROM 
+    green_taxi_data
+WHERE 
+    DATE(lpep_pickup_datetime) IN ('2019-01-01')
+    AND passenger_count IN (2,3)
+GROUP BY 
+    passenger_count;
+
+
+--Question 6:
+SELECT 
+    zDO."Zone"
+    , SUM(t."tip_amount")
+FROM 
+    green_taxi_data t 
+	JOIN zones zDO
+	ON t."DOLocationID" = zDO."LocationID"
+	JOIN zones zPU 
+	ON t."PULocationID" = zPU."LocationID"
+WHERE 
+    zPU."Zone"='Astoria'
+GROUP BY 
+    zDO."Zone"
+ORDER BY 
+    SUM(t."tip_amount") DESC;
