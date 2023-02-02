@@ -8,15 +8,21 @@ from prefect_gcp.cloud_storage import GcsBucket
 @task(retries=3)
 def fetch(dataset_url: str) -> pd.DataFrame:
     """Read taxi data from web to pandas Dataframe"""  
-    df = pd.read_csv(dataset_url, parse_dates=['tpep_pickup_datetime','tpep_dropoff_datetime'])
+    df = pd.read_csv(dataset_url)
     return df
 
 @task(log_prints=True)
-def clean(df = pd.DataFrame) -> pd.DataFrame:
+def clean(df: pd.DataFrame, color: str) -> pd.DataFrame:
     """Fix data type issues"""
-    #we can also use the following to parse dates:
-    # df['tpep_pickup_datetime'] = pd.to_datetime(df['tpep_pickup_datetime'])
-    # df['tpep_dropoff_datetime'] = pd.to_datetime(df['tpep_dropoff_datetime'])
+    #we can also just use parse_dates inside the pd.read_csv:
+    if color=="yellow":
+        df['tpep_pickup_datetime'] = pd.to_datetime(df['tpep_pickup_datetime'])
+        df['tpep_dropoff_datetime'] = pd.to_datetime(df['tpep_dropoff_datetime'])
+    elif color=="green":
+        df['lpep_pickup_datetime'] = pd.to_datetime(df['lpep_pickup_datetime'])
+        df['lpep_dropoff_datetime'] = pd.to_datetime(df['lpep_dropoff_datetime'])
+    else:
+        print("Only yellow or green colors are accepted.")
 
     print(df.head(2))
     print(f"columns: {df.dtypes}")
@@ -46,7 +52,7 @@ def etl_web_to_gcs(year: int, month: int, color: str) -> None:
     dataset_url = f"https://github.com/DataTalksClub/nyc-tlc-data/releases/download/{color}/{dataset_file}.csv.gz"
 
     df = fetch(dataset_url)
-    df_clean = clean(df)
+    df_clean = clean(df, color)
     path = write_local(df_clean, color, dataset_file)
     write_gcs(path)
 
@@ -58,5 +64,4 @@ def etl_parent_flow(
         etl_web_to_gcs(year, month, color)
     
 if __name__ == "__main__":
-    color, months, year = "yellow", [1,2,3], 2021
-    etl_parent_flow(months, year, color)
+    etl_parent_flow()

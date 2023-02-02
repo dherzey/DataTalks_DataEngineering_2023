@@ -1,14 +1,12 @@
 from prefect.infrastructure.docker import DockerContainer
 from prefect.deployments import Deployment
-from parameterized_flow import etl_parent_flow
-from prefect.orion.schemas.schedules import CronSchedule
+from parameterized_gcs_to_bq import etl_parent_flow
 
 docker_block = DockerContainer.load("zoomcamp-docker-container")
 docker_dep = Deployment.build_from_flow(
     flow=etl_parent_flow,
-    name="docker-flow",
-    infrastructure=docker_block #run our flow locally in Docker
-    # schedule=(CronSchedule(cron="0 5 1 * *", timezone="UTC"))
+    name="docker-bq-flow",
+    infrastructure=docker_block
 )
 
 if __name__=="__main__":
