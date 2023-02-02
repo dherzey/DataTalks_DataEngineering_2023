@@ -190,8 +190,27 @@ if __name__=="__main__":
 
 We run this Python script to create our deployment and run the deployment itself.
 
+>NOTE: This will clone the Github repo on the current directory.
+
 ```bash
 prefect deployment run etl-parent-flow/flow-github-storage -p "months=[11]" -p "year=2020" -p "color=green"
 ```
 
 There are 88,605 rows for green taxi data within November 2020.
+
+## Question 5: Email or Slack notification
+
+>It’s often helpful to be notified when something with your dataflow doesn’t work as planned. Choose one of the options below for creating email or slack notifications.
+>
+>The hosted Prefect Cloud lets you avoid running your own server and has Automations that allow you to get notifications when certain events occur or don’t occur.
+>
+>Create a free forever Prefect Cloud account at app.prefect.cloud and connect your workspace to it following the steps in the UI when you sign up.
+>
+>Set up an Automation that will send yourself an email when a flow run completes. Run the deployment used in Q4 for the Green taxi data for April 2019. Check your email to see the notification.
+>
+>Alternatively, use a Prefect Cloud Automation or a self-hosted Orion server Notification to get notifications in a Slack workspace via an incoming webhook.
+>
+>In the Prefect Cloud UI create an Automation or in the Prefect Orion UI create a Notification to send a Slack message when a flow run enters a Completed state.
+>
+>How many rows were procesed by the script?
+
