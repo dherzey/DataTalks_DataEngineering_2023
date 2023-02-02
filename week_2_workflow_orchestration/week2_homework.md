@@ -175,7 +175,7 @@ We can, then, create our deployment by directing our deployment storage to our G
 ```python
 from prefect_github.repository import GitHubRepository
 from prefect.deployments import Deployment
-from parameterized_flow import etl_parent_flow
+from week_2_workflow_orchestration.parameterized_flow import etl_parent_flow
 
 github_block = GitHubRepository.load("zoomcamp-github")
 github_dep = Deployment.build_from_flow(
