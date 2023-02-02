@@ -118,7 +118,7 @@ if __name__=="__main__":
     etl_parent_flow()
 ```
 
-To run this, we will create a new deployment using Docker for running the flows:
+To run this, we will create a new deployment with a Docker infrastructure for running the flows. Note that instead of running our dpeloyment in Docker, we can run it in a local subprocess without any infrastructure.
 ```python
 from prefect.infrastructure.docker import DockerContainer
 from prefect.deployments import Deployment
@@ -140,3 +140,58 @@ We then run this script to create our new Prefect deployment. Afterwards, we add
 ```bash
 prefect deployment run etl-parent-flow/docker-bq-flow
 ```
+
+## Question 4: Github Storage Block
+>Using the `web_to_gcs` script from the videos as a guide, you want to store your flow code in a GitHub repository for collaboration with your team. Prefect can look in the GitHub repo to find your flow code and read it. Create a GitHub storage block from the UI or in Python code and use that in your Deployment instead of storing your flow code locally or baking your flow code into a Docker image.
+>
+>Note that you will have to push your code to GitHub, Prefect will not push it for you.
+>
+>Run your deployment in a local subprocess (the default if you don’t specify an infrastructure). Use the Green taxi data for the month of November 2020.
+>
+>How many rows were processed by the script?
+
+Since I already have my repo in Github, I proceeded to create a new Github block using Python. 
+
+```bash
+pip install prefect-github
+```
+
+```bash
+prefect block register -m prefect_github
+```
+
+```python
+from prefect_github.repository import GitHubRepository
+
+github_block = GitHubRepository(
+    repository_url="https://github.com/dherzey/DataTalks_DataEngineering_2023.git"
+)
+
+github_block.save("zoomcamp-github", overwrite=True)
+```
+
+We can, then, create our deployment by directing our deployment storage to our Github repo:
+
+```python
+from prefect_github.repository import GitHubRepository
+from prefect.deployments import Deployment
+from parameterized_flow import etl_parent_flow
+
+github_block = GitHubRepository.load("zoomcamp-github")
+github_dep = Deployment.build_from_flow(
+    flow = etl_parent_flow,
+    name = "flow-github-storage",
+    storage = github_block
+)
+
+if __name__=="__main__":
+    github_dep.apply()
+```
+
+We run this Python script to create our deployment and run the deployment itself.
+
+```bash
+prefect deployment run etl-parent-flow/flow-github-storage -p "months=[11]" -p "year=2020" -p "color=green"
+```
+
+There are 88,605 rows for green taxi data within November 2020.
