@@ -170,7 +170,7 @@ github_block = GitHubRepository(
 github_block.save("zoomcamp-github", overwrite=True)
 ```
 
-We can, then, create our deployment by directing our deployment storage to our Github repo:
+We can then create our deployment by directing our deployment storage to our Github repo:
 
 ```python
 from prefect.deployments import Deployment
@@ -191,16 +191,28 @@ github_dep = Deployment.build_from_flow(
 if __name__=="__main__":
     github_dep.apply()
 ```
+>NOTE: I am not sure how to direct my deployment specifically to the `week_2_workflow_orchestration` folder. I tried adding the `path` argument in `build_from_flow()` but I still receive the `parameterized_flow.py` not found error for some reason.
 
 We run this Python script to create our deployment and run the deployment itself.
-
->NOTE: This will clone the Github repo on the current directory.
 
 ```bash
 prefect deployment run etl-parent-flow/flow-github-storage -p "months=[11]" -p "year=2020" -p "color=green"
 ```
 
 There are 88,605 rows for green taxi data within November 2020.
+
+>NOTE: I kept encountering an "<i>OSError: Cannot save file into a non-existent directory: 'data/green'</i>." To resolve this, I changed the path in the `write_local()` function of the parameterized_flow script such that it will create the parent directory if it does not exist. See modified part below:
+```python
+@task(log_prints=True)
+def write_local(df: pd.DataFrame, color: str, dataset_file: str) -> Path:
+    """Write Dataframe out locally as parquet file"""
+    path_dir = Path(f"data/{color}")
+    filename = f"{dataset_file}.parquet"
+    path_dir.mkdir(parents=True, exist_ok=True)
+    path = path_dir/filename
+    df.to_parquet(path, compression="gzip")
+    return path
+```
 
 ## Question 5: Email or Slack notification
 
@@ -218,3 +230,47 @@ There are 88,605 rows for green taxi data within November 2020.
 >
 >How many rows were procesed by the script?
 
+Since I opted to use the Prefect cloud, I will need to re-create my blocks and deployments to my cloud workspace. First, I made sure that my Prefect profile is interacting with my cloud account via API:
+
+```bash
+#switch prefect profile if you want to use another profile
+prefect profile use cloud-user
+
+#configure settings for this profile using workspace API
+prefect config set PREFECT_API_URL="https://api.prefect.cloud/api/accounts/[ACCOUNT-ID]/workspaces/[WORKSPACE-ID]"
+
+prefect config set PREFECT_API_KEY="[API-KEY]"
+
+#login to Prefect cloud
+prefect cloud login
+
+#re-run Prefect agent
+prefect agent start -q default
+```
+
+Next, we can re-create all our needed blocks and deployments. In particular, I re-created the GCP and Github blocks, and the Github deployment for this exercise.
+<ul>
+<li><b>gcp_blocks.py</b>: create both GCP credential block and GCS bucket block</li>
+<li><b>github_block.py</b>: create Github repo block</li>
+<li><b>github_deploy.py</b>: create our web to GCS ingestion deployment which takes in file from our Github repo</li>
+</ul>
+
+In the Prefect cloud, we can add a block called email to send notifications externally. Then, we can attach this block to our Automation. For this, we automate the sending of email when our `etl-parent-flow` has completed its run successfully.
+
+Testing our setup, we run our deployment to ingest green taxi data for April 2019:
+
+```bash
+prefect deployment run etl-parent-flow/flow-github-storage -p "months=[4]" -p "year=2019" -p "color=green"
+```
+
+The data ingested has a total of 514,392 rows. The email notification has also been successfully setup:
+
+![Email notification](/week_2_workflow_orchestration/img_md/notif_week2.PNG "Email notification")
+
+## Question 6: Secrets
+
+>Prefect Secret blocks provide secure, encrypted storage in the database and obfuscation in the UI. Create a secret block in the UI that stores a fake 10-digit password to connect to a third-party service. Once you’ve created your block in the UI, how many characters are shown as asterisks (*) on the next page of the UI?
+
+The 10-digit fake password is shown to have 8 asterisks in the UI:
+
+![Secret Block](/week_2_workflow_orchestration/img_md/secret-block-sample.PNG "Secret Block in UI")
