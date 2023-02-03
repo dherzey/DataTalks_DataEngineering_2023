@@ -173,8 +173,12 @@ github_block.save("zoomcamp-github", overwrite=True)
 We can, then, create our deployment by directing our deployment storage to our Github repo:
 
 ```python
-from prefect_github.repository import GitHubRepository
 from prefect.deployments import Deployment
+from prefect_github.repository import GitHubRepository
+
+import sys
+sys.path.insert(0, "/home/jdtganding/Documents/data-engineering-zoomcamp")
+
 from week_2_workflow_orchestration.parameterized_flow import etl_parent_flow
 
 github_block = GitHubRepository.load("zoomcamp-github")
