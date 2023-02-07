@@ -27,12 +27,12 @@ SELECT * FROM zoomcamp-user.trips_data_all.external_yellow_tripdata;
 -- Scanning 1.6GB of data
 SELECT DISTINCT(VendorID)
 FROM zoomcamp-user.trips_data_all.yellow_tripdata_non_partitioned
-WHERE DATE(tpep_pickup_datetime) BETWEEN '2019-06-01' AND '2019-06-30';
+WHERE DATE(tpep_pickup_datetime) BETWEEN '2019-09-01' AND '2019-09-15';
 
 -- Scanning ~106 MB of DATA
 SELECT DISTINCT(VendorID)
 FROM zoomcamp-user.trips_data_all.yellow_tripdata_partitioned
-WHERE DATE(tpep_pickup_datetime) BETWEEN '2019-06-01' AND '2019-06-30';
+WHERE DATE(tpep_pickup_datetime) BETWEEN '2019-09-01' AND '2019-09-15';
 
 -- Let's look into the partitons
 SELECT table_name, partition_id, total_rows
@@ -49,11 +49,11 @@ SELECT * FROM zoomcamp-user.trips_data_all.external_yellow_tripdata;
 -- Query scans 1.1 GB
 SELECT count(*) as trips
 FROM zoomcamp-user.trips_data_all.yellow_tripdata_partitioned
-WHERE DATE(tpep_pickup_datetime) BETWEEN '2019-06-01' AND '2020-12-31'
+WHERE DATE(tpep_pickup_datetime) BETWEEN '2019-09-01' AND '2019-09-15'
   AND VendorID=1;
 
 -- Query scans 864.5 MB
 SELECT count(*) as trips
 FROM zoomcamp-user.trips_data_all.yellow_tripdata_partitioned_clustered
-WHERE DATE(tpep_pickup_datetime) BETWEEN '2019-06-01' AND '2020-12-31'
+WHERE DATE(tpep_pickup_datetime) BETWEEN '2019-09-01' AND '2019-09-15'
   AND VendorID=1;
