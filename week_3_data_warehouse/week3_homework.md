@@ -13,51 +13,88 @@ export GOOGLE_APPLICATION_CREDENTIALS="/home/jdtganding/Documents/data-engineeri
 #verify authentication
 gcloud auth application-default login
 ```
-Next, we can create a script which loads our data from the web to GCS. See `web_to_gcs-gcloud.py` for the sample Python script.
-```python
-import os
-import pyarrow
-import pandas as pd
-from pathlib import Path
-from google.cloud import storage
+Next, we can create a script which loads our data from the web to GCS. See `web_to_gcs-gcloud.py` for the sample Python script. Finally, when the data is already loaded, we can create an external and an internal table in BigQuery using the FHV 2019 data.
+```sql
+-- Creating external table referring to gcs path
+CREATE OR REPLACE EXTERNAL TABLE `zoomcamp-user.trips_data_all.external_fhv_tripdata`
+OPTIONS (
+  format = 'CSV',
+  uris = ['gs://dtc_data_lake_zoomcamp-user/data/fhv/fhv_tripdata_2019-*.csv']
+);
 
-init_url = 'https://github.com/DataTalksClub/nyc-tlc-data/releases/download/fhv/'
-BUCKET = os.environ.get("GCP_GCS_BUCKET", "dtc_data_lake_zoomcamp-user")
-
-def upload_to_gcs(bucket, object_name, local_file):
-
-    # WORKAROUND to prevent timeout for files > 6 MB on 800 kbps upload speed.
-    # (Ref: https://github.com/googleapis/python-storage/issues/74)
-    storage.blob._MAX_MULTIPART_SIZE = 5 * 1024 * 1024  # 5 MB
-    storage.blob._DEFAULT_CHUNKSIZE = 5 * 1024 * 1024  # 5 MB
-
-    client = storage.Client()
-    bucket = client.bucket(bucket)
-    blob = bucket.blob(object_name)
-    blob.upload_from_filename(local_file)
-
-def web_to_gcs(service, year):
-
-    # create parent directory if it does not exist
-    path_dir = Path(f"data/{service}")
-    path_dir.mkdir(parents=True, exist_ok=True)
-
-    for month in range(12):
-
-        file_name = f"{service}_tripdata_{year}-{month+1:02}.csv.gz"
-        url = init_url + file_name
-        local_file = path_dir/file_name
-
-        # download data as a csv file
-        os.system(f"wget {url} -O {local_file}")
-
-        # upload parquet file to gcs 
-        upload_to_gcs(BUCKET, f"data/{service}/{file_name}", local_file)
-        print(f"File uploaded to GCS with path data/{service}/{file_name}")
-
-web_to_gcs('fhv', 2019)
+-- Create non-partitioned table from external table
+CREATE OR REPLACE TABLE zoomcamp-user.trips_data_all.fhv_tripdata_non_partitioned AS
+SELECT * FROM zoomcamp-user.trips_data_all.external_fhv_tripdata;
 ```
-When the data is already loaded, we can create an external and an internal table in BigQuery using the FHV 2019 data.
 
 ## Question 1: 
 > What is the count for fhv vehicle records for the year 2019?
+
+```sql
+SELECT COUNT(*) 
+FROM trips_data_all.fhv_tripdata_non_partitioned;
+```
+From the result, there are 43,244,696 vehicle records in 2019.
+
+## Question 2:
+> Write a query to count the distinct number of affiliated_base_number for the entire dataset on both the tables.
+What is the estimated amount of data that will be read when this query is executed on the External Table and the Table?
+
+```sql
+SELECT DISTINCT Affiliated_base_number 
+FROM `zoomcamp-user.trips_data_all.fhv_tripdata_non_partitioned`;
+
+SELECT DISTINCT Affiliated_base_number 
+FROM `zoomcamp-user.trips_data_all.external_fhv_tripdata`;
+```
+The BQ table processed 317.94 MB of data while the External table processed 0 MB of data.
+
+## Question 3:
+> How many records have both a blank (null) PUlocationID and DOlocationID in the entire dataset?
+
+```sql
+SELECT COUNT(*) 
+FROM `zoomcamp-user.trips_data_all.external_fhv_tripdata` 
+WHERE PUlocationID IS NULL 
+AND DOlocationID IS NULL;
+```
+A total of 717,748 rows have NULL values for both columns
+
+## Question 4:
+> What is the best strategy to optimize the table if query always filter by pickup_datetime and order by affiliated_base_number?
+
+For this case, it is best to partition our table by the pickup_datetime and cluster our table by the affiliated_base_number.
+
+## Question 5:
+> Implement the optimized solution you chose for question 4. Write a query to retrieve the distinct affiliated_base_number between pickup_datetime 03/01/2019 and 03/31/2019 (inclusive).
+Use the BQ table you created earlier in your from clause and note the estimated bytes. Now change the table in the from clause to the partitioned table you created for question 4 and note the estimated bytes processed. What are these values? Choose the answer which most closely matches.
+
+Partitioning by pickup_datetime and clustering by affiliated_base_number:
+```sql
+CREATE OR REPLACE TABLE zoomcamp-user.trips_data_all.fhv_tripdata_partitioned_clustered
+PARTITION BY DATE(pickup_datetime)
+CLUSTER BY Affiliated_base_number AS
+SELECT * FROM zoomcamp-user.trips_data_all.external_fhv_tripdata;
+```
+```sql
+SELECT DISTINCT Affiliated_base_number
+FROM `zoomcamp-user.trips_data_all.fhv_tripdata_partitioned_clustered`
+WHERE pickup_datetime >= "2019-03-01" 
+AND pickup_datetime <= "2019-03-31";
+
+SELECT DISTINCT Affiliated_base_number
+FROM `zoomcamp-user.trips_data_all.fhv_tripdata_non_partitioned`
+WHERE pickup_datetime >= "2019-03-01" 
+AND pickup_datetime <= "2019-03-31";
+```
+From the queries, the paritioned and clustered table processed around 24 MB of data while the non-partitioned table processed around 648 MB of data.
+
+## Question 6:
+> Where is the data stored in the External Table you created?
+
+Data for the external table is located in Google Cloud Storage Bucket
+
+## Question 7:
+> Is it a best practice in Big Query to always cluster your data?
+
+To optimize our query performance, it is a best practice to partition or cluster our data in BigQuery.

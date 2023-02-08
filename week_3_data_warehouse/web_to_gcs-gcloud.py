@@ -35,10 +35,12 @@ def web_to_gcs(service, year):
         os.system(f"wget {url} -O {local_file}")
 
         try:
-            # read csv file (and convert to parquet if needed)
+            # read file and convert to csv/parquet
             df = pd.read_csv(local_file, compression="gzip")
-            # parquet_file = file_name.replace('.csv.gz','.parquet')
-            # df.to_parquet(path_dir/parquet_file, engine='pyarrow')
+            file_name = file_name.replace('.csv.gz','.csv')
+            local_file = path_dir/file_name
+            df.to_csv(local_file)
+            # df.to_parquet(local_file, engine='pyarrow')
             print(f"Dataset {file_name} read with shape {df.shape}")
         except pd.errors.EmptyDataError:
             os.remove(local_file)
@@ -47,7 +49,6 @@ def web_to_gcs(service, year):
             pass
 
         # upload parquet file to gcs 
-        # if parquet, change file_name and local_file
         upload_to_gcs(BUCKET, f"data/{service}/{file_name}", local_file)
         print(f"File uploaded to GCS with path {local_file}")
 
