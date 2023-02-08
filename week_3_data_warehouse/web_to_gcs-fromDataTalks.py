@@ -13,9 +13,9 @@ Pre-reqs:
 """
 
 # services = ['fhv','green','yellow']
-init_url = 'https://nyc-tlc.s3.amazonaws.com/trip+data/'
+init_url = 'https://github.com/DataTalksClub/nyc-tlc-data/releases/tag/fhv/'
 # switch out the bucketname
-BUCKET = os.environ.get("GCP_GCS_BUCKET", "dtc-data-lake-bucketname")
+BUCKET = os.environ.get("GCP_GCS_BUCKET", "dtc_data_lake_zoomcamp-user")
 
 
 def upload_to_gcs(bucket, object_name, local_file):
@@ -58,7 +58,6 @@ def web_to_gcs(year, service):
         # upload it to gcs 
         upload_to_gcs(BUCKET, f"{service}/{file_name}", file_name)
         print(f"GCS: {service}/{file_name}")
-
 
 web_to_gcs('2019', 'green')
 web_to_gcs('2020', 'green')

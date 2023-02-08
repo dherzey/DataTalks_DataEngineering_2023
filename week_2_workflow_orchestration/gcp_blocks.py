@@ -1,11 +1,11 @@
 from prefect_gcp import GcpCredentials
 from prefect_gcp.cloud_storage import GcsBucket
 
-import json
-service_info_json = json.load(open("zoomcamp-user-bfecc07e3f66.json"))
+# import json
+# service_info_json = json.load(open("zoomcamp-user-bfecc07e3f66.json"))
 
 credentials_block = GcpCredentials(
-    service_account_info = service_info_json
+    service_account_file = '/home/jdtganding/Documents/data-engineering-zoomcamp/week_2_workflow_orchestration/zoomcamp-user-bfecc07e3f66.json'
 )
 credentials_block.save("zoom-gcp-creds", overwrite=True)
 

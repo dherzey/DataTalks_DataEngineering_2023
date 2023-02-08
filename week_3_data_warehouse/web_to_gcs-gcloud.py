@@ -1,20 +1,3 @@
-# Week 3 - Homework
-
-## Setup
-For this assignment, we will need to ingest FHV NY Taxi Data and load it into our Google Cloud Storage. We can use an orchestrator like Airflow or Prefect, or use the GCS client to load data to our bucket. For the latter, we make sure that the following are installed:
-```bash
-pip install pandas pyarrow google-cloud-storage
-```
-In order to use our storage, we need to authenticate our service account to our local machine:
-```bash
-#set environment variable to point to downloaded service account keys
-export GOOGLE_APPLICATION_CREDENTIALS="/home/jdtganding/Documents/data-engineering-zoomcamp/week_2_workflow_orchestration/zoomcamp-user-bfecc07e3f66.json"
-
-#verify authentication
-gcloud auth application-default login
-```
-Next, we can create a script which loads our data from the web to GCS. See `web_to_gcs-gcloud.py` for the sample Python script.
-```python
 import os
 import pyarrow
 import pandas as pd
@@ -51,13 +34,21 @@ def web_to_gcs(service, year):
         # download data as a csv file
         os.system(f"wget {url} -O {local_file}")
 
+        try:
+            # read csv file (and convert to parquet if needed)
+            df = pd.read_csv(local_file, compression="gzip")
+            # parquet_file = file_name.replace('.csv.gz','.parquet')
+            # df.to_parquet(path_dir/parquet_file, engine='pyarrow')
+            print(f"Dataset {file_name} read with shape {df.shape}")
+        except pd.errors.EmptyDataError:
+            os.remove(local_file)
+            print(f"Removed {local_file}")
+        except FileNotFoundError:
+            pass
+
         # upload parquet file to gcs 
+        # if parquet, change file_name and local_file
         upload_to_gcs(BUCKET, f"data/{service}/{file_name}", local_file)
-        print(f"File uploaded to GCS with path data/{service}/{file_name}")
+        print(f"File uploaded to GCS with path {local_file}")
 
 web_to_gcs('fhv', 2019)
-```
-When the data is already loaded, we can create an external and an internal table in BigQuery using the FHV 2019 data.
-
-## Question 1: 
-> What is the count for fhv vehicle records for the year 2019?

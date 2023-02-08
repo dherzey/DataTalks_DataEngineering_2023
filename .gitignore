@@ -6,3 +6,4 @@ week_1_basics_n_setup/1_terraform_gcp/.terraform.lock.hcl
 week_2_workflow_orchestration/zoom/
 week_2_workflow_orchestration/data
 week_2_workflow_orchestration/zoomcamp-user-bfecc07e3f66.json
+week_3_data_warehouse/data/
