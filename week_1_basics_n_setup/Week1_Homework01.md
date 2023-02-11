@@ -1,12 +1,17 @@
---Question 1:
+# Week 1 - Homework Part 1
+
+## Question 1:
+```bash
 docker build --help
+```
 
-
---Question 2:
+## Question 2:
+```bash
 docker run -it --entrypoint=bash python:3.9
+```
 
-
---Question 3:
+## Question 3:
+```sql
 SELECT 
     COUNT(*)
 FROM 
@@ -14,9 +19,10 @@ FROM
 WHERE 
     DATE(lpep_pickup_datetime) IN ('2019-01-15')
     AND DATE(lpep_dropoff_datetime) IN ('2019-01-15');
+```
 
-
---Question 4:
+## Question 4:
+```sql
 SELECT 
     DATE(lpep_pickup_datetime)
     , COUNT(*)
@@ -29,9 +35,10 @@ GROUP BY
     DATE(lpep_pickup_datetime)
 ORDER BY 
     COUNT(*);
+```
 
-
---Question 5:
+## Question 5:
+```sql
 SELECT 
     passenger_count
     , COUNT(*)
@@ -42,9 +49,10 @@ WHERE
     AND passenger_count IN (2,3)
 GROUP BY 
     passenger_count;
+```
 
-
---Question 6:
+## Question 6:
+```sql
 SELECT 
     zDO."Zone"
     , SUM(t."tip_amount")
@@ -60,3 +68,4 @@ GROUP BY
     zDO."Zone"
 ORDER BY 
     SUM(t."tip_amount") DESC;
+```

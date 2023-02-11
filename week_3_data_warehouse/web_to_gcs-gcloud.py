@@ -31,7 +31,7 @@ def web_to_gcs(service, year):
         url = init_url + file_name
         local_file = path_dir/file_name
 
-        # download data as a csv file
+        # download data as a csv file or just proceed to read it directly
         os.system(f"wget {url} -O {local_file}")
 
         try:
