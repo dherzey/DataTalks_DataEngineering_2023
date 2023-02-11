@@ -21,13 +21,13 @@ def transform(path: Path) -> pd.DataFrame:
     return df
 
 @task(log_prints=True)
-def write_bq(df: pd.DataFrame) -> None:
+def write_bq(df: pd.DataFrame, color: str) -> None:
     """Write Dataframe to BigQuery"""
     gcp_credentials_block = GcpCredentials.load("zoom-gcp-creds")   
 
     #using pandas to load data to BigQuery
     df.to_gbq(
-        destination_table="trips_data_all.yellow_taxi_data",
+        destination_table=f"trips_data_all.{color}_taxi_data",
         project_id="zoomcamp-user",
         credentials=gcp_credentials_block.get_credentials_from_service_account(),
         chunksize=500_000,
@@ -40,7 +40,7 @@ def etl_gcs_to_bq(year, month, color):
     dataset_file = f"{color}_tripdata_{year}-{month:02}"
     path = extract_from_gcs(color, year, month, dataset_file)
     df = transform(path)
-    write_bq(df)
+    write_bq(df, color)
 
 @flow()
 def etl_parent_flow(
