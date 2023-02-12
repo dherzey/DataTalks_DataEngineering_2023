@@ -31,20 +31,40 @@ def web_to_gcs(service, year):
         file_name = f"{service}_tripdata_{year}-{month+1:02}.csv.gz"
         url = init_url + file_name
 
-        try:
-            # read file and convert to csv/parquet
-            df = pd.read_csv(url)
-            file_name = file_name.replace('.csv.gz','.csv')
-            local_file = path_dir/file_name            
-            df.to_csv(local_file)
-            # df.to_parquet(local_file, compression="gzip", engine='pyarrow')
-            print(f"Dataset {file_name} read with shape {df.shape}")
-        except pd.errors.EmptyDataError:
-            pass
+        # read file and convert to csv/parquet
+        df_iter = pd.read_csv(url, iterator=True, chunksize=1000000)
 
-        # upload file to gcs 
-        upload_to_gcs(BUCKET, f"data/{service}/{file_name}", local_file)
-        print(f"File uploaded to GCS with path {local_file}")
+        count = 0
+        while True:
+            try:
+                df = next(df_iter)
+
+                if service=="yellow":
+                    df['tpep_pickup_datetime'] = pd.to_datetime(df['tpep_pickup_datetime'])
+                    df['tpep_dropoff_datetime'] = pd.to_datetime(df['tpep_dropoff_datetime'])
+                elif service=="green":
+                    df['lpep_pickup_datetime'] = pd.to_datetime(df['lpep_pickup_datetime'])
+                    df['lpep_dropoff_datetime'] = pd.to_datetime(df['lpep_dropoff_datetime'])
+                else:
+                    pass
+        
+                new_file = file_name.replace('.csv.gz',f'_part{count+1:02}.parquet')
+                local_file = path_dir/new_file            
+                # df.to_csv(local_file)
+                df.to_parquet(local_file, compression="gzip", engine='pyarrow')
+                print(f"Dataset {new_file} read with shape {df.shape}")
+                count += 1
+            except pd.errors.EmptyDataError:
+                pass
+            except StopIteration:
+                break
+
+            # upload file to gcs 
+            upload_to_gcs(BUCKET, f"data/{service}/{new_file}", local_file)
+            print(f"File uploaded to GCS with path {local_file}")
 
 # web_to_gcs('fhv', 2019)
-web_to_gcs('green', 2019)
+# web_to_gcs('green', 2019)
+# web_to_gcs('green', 2020)
+web_to_gcs('yellow', 2019)
+web_to_gcs('yellow', 2020)
