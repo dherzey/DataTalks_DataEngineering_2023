@@ -1,5 +1,6 @@
 import os
 import pyarrow
+import argparse
 import pandas as pd
 from pathlib import Path
 from google.cloud import storage
@@ -18,7 +19,10 @@ def upload_to_gcs(bucket, object_name, local_file):
     blob = bucket.blob(object_name)
     blob.upload_from_filename(local_file)
 
-def web_to_gcs(service, year):
+def web_to_gcs(params):
+
+    service = params.service
+    year = params.year
 
     init_url = f'https://github.com/DataTalksClub/nyc-tlc-data/releases/download/{service}/'
 
@@ -63,8 +67,12 @@ def web_to_gcs(service, year):
             upload_to_gcs(BUCKET, f"data/{service}/{new_file}", local_file)
             print(f"File uploaded to GCS with path {local_file}")
 
-# web_to_gcs('fhv', 2019)
-# web_to_gcs('green', 2019)
-# web_to_gcs('green', 2020)
-web_to_gcs('yellow', 2019)
-web_to_gcs('yellow', 2020)
+if __name__=="__main__":
+    parser = argparse.ArgumentParser(description='Ingest CSV data to GCS')
+
+    #specify the needed arguments
+    parser.add_argument('--service', required=True, help='service or NY taxi data type')
+    parser.add_argument('--year', required=True, help='NY taxi data year')
+
+    args = parser.parse_args()
+    web_to_gcs(args)
