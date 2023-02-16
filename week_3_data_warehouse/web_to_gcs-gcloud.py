@@ -36,7 +36,7 @@ def web_to_gcs(params):
         url = init_url + file_name
 
         # read file and convert to csv/parquet
-        df_iter = pd.read_csv(url, iterator=True, chunksize=1000000)
+        df_iter = pd.read_csv(url, iterator=True, chunksize=3000000)
 
         count = 0
         while True:
@@ -51,6 +51,10 @@ def web_to_gcs(params):
                     df['lpep_dropoff_datetime'] = pd.to_datetime(df['lpep_dropoff_datetime'])
                 else:
                     pass
+
+                df['VendorID'] = df['VendorID'].astype(float)
+                df['passenger_count'] = df['passenger_count'].astype(float)
+                df['store_and_fwd_flag'] = df['store_and_fwd_flag'].astype(str)
         
                 new_file = file_name.replace('.csv.gz',f'_part{count+1:02}.parquet')
                 local_file = path_dir/new_file            
