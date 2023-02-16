@@ -51,10 +51,13 @@ def web_to_gcs(params):
                     df['lpep_dropoff_datetime'] = pd.to_datetime(df['lpep_dropoff_datetime'])
                 else:
                     pass
-
-                df['VendorID'] = df['VendorID'].astype(float)
-                df['passenger_count'] = df['passenger_count'].astype(float)
-                df['store_and_fwd_flag'] = df['store_and_fwd_flag'].astype(str)
+                
+                # BigQuery does not seem to parse NULL values in integer columns resulting to errors
+                columns = ['VendorID', 'RatecodeID', 'passenger_count', 'trip_distance',
+                            'fare_amount', 'extra', 'mta_tax', 'tip_amount', 'tolls_amount',
+                              'ehail_fee', 'improvement_surcharge', 'total_amount', 'payment_type',
+                                'trip_type', 'congestion_surcharge']
+                df[columns] = df[columns].astype(float)
         
                 new_file = file_name.replace('.csv.gz',f'_part{count+1:02}.parquet')
                 local_file = path_dir/new_file            
