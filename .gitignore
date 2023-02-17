@@ -1,4 +1,5 @@
 service_account_key.json
+access-tokens-api
 week_1_basics_n_setup/2_docker_sql/data_images/
 week_1_basics_n_setup/1_terraform_gcp/terraform.tfstate
 week_1_basics_n_setup/1_terraform_gcp/.terraform/

@@ -43,21 +43,26 @@ def web_to_gcs(params):
             try:
                 df = next(df_iter)
 
+                # BigQuery does not seem to parse NULL values in integer columns resulting to errors
+                columns = ['VendorID', 'RatecodeID', 'passenger_count', 'trip_distance',
+                            'fare_amount', 'extra', 'mta_tax', 'tip_amount', 'tolls_amount',
+                            'ehail_fee', 'improvement_surcharge', 'total_amount', 'payment_type',
+                            'trip_type', 'congestion_surcharge']
+
                 if service=="yellow":
                     df['tpep_pickup_datetime'] = pd.to_datetime(df['tpep_pickup_datetime'])
                     df['tpep_dropoff_datetime'] = pd.to_datetime(df['tpep_dropoff_datetime'])
+                    # also update columns we need to change datatype for yellow taxi data
+                    columns.remove('ehail_fee')
+                    columns.remove('trip_type')
                 elif service=="green":
                     df['lpep_pickup_datetime'] = pd.to_datetime(df['lpep_pickup_datetime'])
                     df['lpep_dropoff_datetime'] = pd.to_datetime(df['lpep_dropoff_datetime'])
                 else:
                     pass
                 
-                # BigQuery does not seem to parse NULL values in integer columns resulting to errors
-                columns = ['VendorID', 'RatecodeID', 'passenger_count', 'trip_distance',
-                            'fare_amount', 'extra', 'mta_tax', 'tip_amount', 'tolls_amount',
-                              'ehail_fee', 'improvement_surcharge', 'total_amount', 'payment_type',
-                                'trip_type', 'congestion_surcharge']
                 df[columns] = df[columns].astype(float)
+                df['store_and_fwd_flag'] = df['store_and_fwd_flag'].astype(str)
         
                 new_file = file_name.replace('.csv.gz',f'_part{count+1:02}.parquet')
                 local_file = path_dir/new_file            
