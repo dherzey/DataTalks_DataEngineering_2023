@@ -7,7 +7,4 @@ week_1_basics_n_setup/1_terraform_gcp/.terraform.lock.hcl
 week_2_workflow_orchestration/zoom/
 week_2_workflow_orchestration/data
 week_3_data_warehouse/data/
-week_5_batch_processing/zones/
-week_5_batch_processing/taxi+_zone_lookup.csv
-week_5_batch_processing/fhvhv_tripdata_2021-01.parquet
 week_5_batch_processing/data/
