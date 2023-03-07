@@ -28,6 +28,6 @@ docker run -it --network=2_docker_sql_default taxi_ingest:v001 --user=root --pas
 
 docker run -it --network=2_docker_sql_default taxi_ingest:v001 --user=root --password=root --host=2_docker_sql-pgdatabase-1 --port=5432 --db=ny_taxi --table_name=yellow_taxi_data --url=${URL}
 
-export GOOGLE_APPLICATION_CREDENTIALS="zoomcamp-user-bfecc07e3f66.json"
+export GOOGLE_APPLICATION_CREDENTIALS="/home/jdtganding/Documents/data-engineering-zoomcamp/service_account_key.json"
 
 gcloud auth application-default set-quota-project ${PROJECT_NAME}
