@@ -31,3 +31,12 @@ docker run -it --network=2_docker_sql_default taxi_ingest:v001 --user=root --pas
 export GOOGLE_APPLICATION_CREDENTIALS="/home/jdtganding/Documents/data-engineering-zoomcamp/service_account_key.json"
 
 gcloud auth application-default set-quota-project ${PROJECT_NAME}
+
+gcloud dataproc jobs submit pyspark \
+    --cluster=de-zoomcamp-cluster \
+    --region=us-west1 \
+    gs://dtc_data_lake_zoomcamp-user/code/spark-submit_test.py \
+		-- \
+	    --main_dir=gs://dtc_data_lake_zoomcamp-user/pq \
+			--input_green=green/2020/*/ \
+			--input_yellow=yellow/2020/*/
