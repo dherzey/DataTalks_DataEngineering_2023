@@ -35,7 +35,6 @@ Full code found in [ScrapeOscarsDB.py](https://github.com/dherzey/DataTalks_Data
 import io
 import requests
 import pandas as pd
-from bs4 import BeautifulSoup
 
 html = requests.get('http://bechdeltest.com/api/v1/getAllMovies').content
 df = pd.read_json(io.StringIO(html.decode('utf-8')))
